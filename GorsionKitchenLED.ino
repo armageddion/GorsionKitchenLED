@@ -69,7 +69,7 @@ int snakelen = 10;   // how long the snake should be
 int snakedelay = 30; // regulates speed of the snake
 bool finished = false;
 
-// SPARKE CONFIG 
+// SPARKLE CONFIG 
 #define SIZE_ONS 30
 int ons[SIZE_ONS]; // random array to hold IDs of lit LEDs
 
@@ -237,6 +237,11 @@ void loop() {
     pattern_3();
     delay(1000);
   } 
+  else if (state == 4) {
+    Serial.println("Starting pattern4");  
+    pattern_4();
+    delay(1000);
+  }   
 }
 
 void printWifiStatus() {
@@ -306,3 +311,44 @@ void pattern_3(){
   }
 }
 
+// Sparkle sparkle
+void pattern_4(){
+  Serial.println("Starting to sparkle");
+
+  // set some cute color
+  uint8_t color_r=232;
+  uint8_t color_g=92;
+  uint8_t color_b=60;
+  
+  // navigate through pixels
+  //pic a random pixel to fire
+  int in_pix = random(0,NUM_PIXELS);
+  Serial.print("random pixel in :");
+  Serial.println(in_pix);
+  
+  // pop a random pixel
+  int out_pix_idx = random(0,SIZE_ONS);
+  int out_pix = ons[out_pix_idx];
+  Serial.print("random pixel out :");
+  Serial.println(out_pix);
+  
+  // fade in next pixel as we fade out previous
+  uint32_t color_in=pixels.Color(color_r,color_g,color_b);
+  uint32_t color_out=pixels.Color(0,0,0);
+  pixels.fill(color_in,in_pix,1); 
+  pixels.fill(color_out,out_pix,1);
+  pixels.show();
+
+  // push new pixel in place of the one that was popped 
+  ons[out_pix_idx] = in_pix;
+
+  //DEBUG
+  Serial.print("ons: ");
+  for (int i=0; i<SIZE_ONS; i++){
+    Serial.print(ons[i]);
+    Serial.print(",");
+  }
+  Serial.println(" ");
+
+  delay(50);  
+}
