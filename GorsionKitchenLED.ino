@@ -43,7 +43,7 @@ WiFiServer server(80);
 
 // current state
 //int state = 0;
-int state = 2;  // auto-start -- testing
+int state = 4;  // auto-start -- testing
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
@@ -57,20 +57,21 @@ const uint32_t colores[]={
     pixels.Color(245,77,77),            //light red
     pixels.Color(53,143,4),             //mostly green
     pixels.Color(26,143,125),           //mostly teal
-    pixels.Color(49,245,96)             //mostly green
+    pixels.Color(49,245,96),            //mostly green
+    pixels.Color(255,228,68)            //mostly green
 };
 uint32_t black = pixels.Color(0,0,0);
 
 // GLOBAL DELAY
-int delayval = 50; // delay for half a second
+int delayval = 50;                      // delay for half a second
 
 // SNAKE CONFIG
-int snakelen = 10;   // how long the snake should be
-int snakedelay = 30; // regulates speed of the snake
-bool finished = false;
+int snakelen = 20;                      // how long the snake should be
+int snakedelay = 30;                    // regulates speed of the snake
+bool finished = false;                  // flag for sink and stova patterns
 
 // SPARKLE CONFIG 
-#define SIZE_ONS 30
+#define SIZE_ONS 15
 int ons[SIZE_ONS]; // random array to hold IDs of lit LEDs
 
 void setup() {
@@ -80,16 +81,16 @@ void setup() {
   #endif
   // End of trinket special code
 
-  pinMode(LED_BUILTIN, OUTPUT);   // PIN 13 LED
+  pinMode(LED_BUILTIN, OUTPUT);             // PIN 13 LED
 
-  pixels.begin();     // This initializes the NeoPixel library
+  pixels.begin();                           // This initializes the NeoPixel library
 
   // initialize our ons array
   for (int i=0; i<SIZE_ONS; i++){
     ons[i]=0;
   } 
 
-  Serial.begin(9600);                 // DEBUG
+  Serial.begin(9600);                       // DEBUG
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -119,18 +120,18 @@ void setup() {
 
 void loop() {
   // For a set of NeoPixels the first NeoPixel is 0, second is 1, all the way up to the count of pixels minus one.
-  Serial.println("Head of loop");     // DEBUG
+  Serial.println("Head of loop");          // DEBUG
 
-  WiFiClient client = server.available();   // listen for incoming clients
+  WiFiClient client = server.available();  // listen for incoming clients
 
-  if (client) {                             // if you get a client,
-      Serial.println("new client");           // print a message out the serial port
-      String currentLine = "";                // make a String to hold incoming data from the client
-      while (client.connected()) {            // loop while the client's connected
-          if (client.available()) {             // if there's bytes to read from the client,
-              char c = client.read();             // read a byte, then
-              Serial.write(c);                    // print it out the serial monitor
-              if (c == '\n') {                    // if the byte is a newline character
+  if (client) {                            // if you get a client,
+      Serial.println("new client");        // print a message out the serial port
+      String currentLine = "";             // make a String to hold incoming data from the client
+      while (client.connected()) {         // loop while the client's connected
+          if (client.available()) {        // if there's bytes to read from the client,
+              char c = client.read();      // read a byte, then
+              Serial.write(c);             // print it out the serial monitor
+              if (c == '\n') {             // if the byte is a newline character
 
                   // if the current line is blank, you got two newline characters in a row.
                   // that's the end of the client HTTP request, so send a response:
@@ -154,11 +155,11 @@ void loop() {
                       client.println();
                       // break out of the while loop:
                       break;
-                  } else {    // if you got a newline, then clear currentLine:
+                  } else {                 // if you got a newline, then clear currentLine:
                       currentLine = "";
                   }
-              } else if (c != '\r') {  // if you got anything else but a carriage return character,
-                  currentLine += c;      // add it to the end of the currentLine
+              } else if (c != '\r') {      // if you got anything else but a carriage return character,
+                  currentLine += c;        // add it to the end of the currentLine
               }
 
               finished = false; // on new request reset "finished" flag // DEBUG
@@ -207,10 +208,11 @@ void loop() {
       Serial.println("client disonnected");
   }
   
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(1000);
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(1000);  
+  // TEST CODE
+  //digitalWrite(LED_BUILTIN, HIGH);
+  //delay(1000);
+  //digitalWrite(LED_BUILTIN, LOW);
+  //delay(1000);  
 
   if (state == 0) {
     Serial.println("Shutting things off"); 
@@ -225,23 +227,28 @@ void loop() {
   else if (state == 1) {
     Serial.println("Starting pattern1");
     pattern_1();
-    delay(1000);
+    //delay(1000);
   }
   else if (state == 2) {
     Serial.println("Starting pattern2");  
     pattern_2();
-    delay(1000);
+    //delay(1000);
   } 
   else if (state == 3) {
     Serial.println("Starting pattern3");  
     pattern_3();
-    delay(1000);
+    //delay(1000);
   } 
   else if (state == 4) {
     Serial.println("Starting pattern4");  
     pattern_4();
-    delay(1000);
+    //delay(1000);      // it's too slow otherwise
   }   
+  else if (state == 5) {
+    Serial.println("Starting pattern4");  
+    pattern_5();
+    //delay(1000);      // it's too slow otherwise
+  }     
 }
 
 void printWifiStatus() {
@@ -265,10 +272,10 @@ void printWifiStatus() {
 }
 
 // test pattern for now
-// SNAKE
+// SNAKE with random colors
 void pattern_1(){
   Serial.println("Snaking from start to end");
-  uint32_t color1 = colores[random(0,6)];
+  uint32_t color1 = colores[random(0,7)];
   for (int i=0; i<=(NUM_PIXELS+snakelen);i++){
     pixels.clear();
     pixels.fill(color1,i-snakelen,snakelen);
@@ -280,10 +287,10 @@ void pattern_1(){
 // Stove lighting
 void pattern_2(){
   Serial.println("Lighting up the stove");
-  int midpoint = 98;
-  uint32_t color1 = pixels.Color(255,255,200);
+  int midpoint = 90;
+  uint32_t color1 = pixels.Color(255,255,255);
   if (finished == false){
-    for (int i=0; i<20;i++){
+    for (int i=0; i<25;i++){
       pixels.clear();
       pixels.fill(color1,midpoint-i,i*2);
       pixels.show();
@@ -316,6 +323,7 @@ void pattern_4(){
   Serial.println("Starting to sparkle");
 
   // set some cute color
+  //(232,92,60)
   uint8_t color_r=232;
   uint8_t color_g=92;
   uint8_t color_b=60;
@@ -333,11 +341,33 @@ void pattern_4(){
   Serial.println(out_pix);
   
   // fade in next pixel as we fade out previous
-  uint32_t color_in=pixels.Color(color_r,color_g,color_b);
-  uint32_t color_out=pixels.Color(0,0,0);
-  pixels.fill(color_in,in_pix,1); 
-  pixels.fill(color_out,out_pix,1);
-  pixels.show();
+  //uint32_t color_in=pixels.Color(color_r,color_g,color_b);
+  //uint32_t color_out=pixels.Color(0,0,0);
+  int intensity = 255;
+  for (int i=0; i<=intensity; i++){
+    if (i<=68){
+      pixels.fill(pixels.Color(i,i,i),in_pix,1);
+    }
+    else if (i>68 && i <=228){
+      pixels.fill(pixels.Color(i,i,68),in_pix,1);
+    }
+    else {
+      pixels.fill(pixels.Color(i,228,68),in_pix,1);
+    }
+
+    if (i<=intensity-228){
+      pixels.fill(pixels.Color(intensity-i,228,68),out_pix,1);
+    }
+    else if (i<=intensity-68) {
+      pixels.fill(pixels.Color(intensity-i,intensity-i,68),out_pix,1);
+    }
+    else {
+      pixels.fill(pixels.Color(intensity-i,intensity-i,intensity-i),out_pix,1);
+    }
+    //pixels.fill(pixels.Color(i,i,i),in_pix,1);
+    //pixels.fill(pixels.Color(intensity-i,intensity-i,intensity-i),out_pix,1);
+    pixels.show();
+  }
 
   // push new pixel in place of the one that was popped 
   ons[out_pix_idx] = in_pix;
@@ -350,5 +380,25 @@ void pattern_4(){
   }
   Serial.println(" ");
 
-  delay(50);  
+  delay(500);  
+}
+
+// another chase/splash
+void pattern_5(){
+  Serial.println("Snaking randmly");
+  uint32_t color1 = colores[random(0,7)];
+  int start_pix = random(0,NUM_PIXELS);
+  for (int i=0; i<=(NUM_PIXELS+snakelen);i++){
+    pixels.clear();
+    if (i<snakelen){
+      pixels.fill(color1,start_pix-i,i);
+      pixels.fill(color1,start_pix,i);
+    }
+    else{
+      pixels.fill(color1,start_pix-i,snakelen);
+      pixels.fill(color1,start_pix+i-snakelen,snakelen);
+    }
+    pixels.show();
+    delay(snakedelay);
+  }
 }
